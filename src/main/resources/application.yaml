@@ -34,7 +34,7 @@ spring:
           lob:
             non_contextual_creation: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/design_product_service?useSSL=false&useUnicode=true&characterEncoding=UTF-8
+    url: jdbc:postgresql://localhost:5432/postgres?useSSL=false&useUnicode=true&characterEncoding=UTF-8
     username: postgres
     password: 123456
 

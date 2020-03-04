@@ -1,9 +1,17 @@
 package example.service.impl;
 
 import example.dto.ExcelExampleDto;
+import example.entity.ExcelExample;
+import example.repository.ExcelExampleRepository;
 import example.service.ExcelService;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -16,6 +24,7 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -26,6 +35,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @Transactional
 public class ExcelServiceImpl implements ExcelService {
+
+  @Autowired
+  private ExcelExampleRepository excelExampleRepository;
 
   @Override
   public Resource exportExcel(List<ExcelExampleDto> excelExampleDtos) {
@@ -93,6 +105,34 @@ public class ExcelServiceImpl implements ExcelService {
 
   @Override
   public String importExcel(MultipartFile multipartFile) {
-    return null;
+    try {
+      XSSFWorkbook workbook = new XSSFWorkbook(multipartFile.getInputStream());
+      XSSFSheet worksheet = workbook.getSheetAt(0);
+      List<ExcelExample> excelExamples = new ArrayList<>();
+      for (int i = 4; i < worksheet.getPhysicalNumberOfRows(); i++) {
+        ExcelExample excelExample = new ExcelExample();
+
+        XSSFRow row = worksheet.getRow(i);
+
+        String str = row.getCell(0).getStringCellValue();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        LocalDate date = LocalDate.parse(str, formatter);
+        LocalDateTime dateTime = LocalDateTime.of(date, LocalDateTime.MIN.toLocalTime());
+        excelExample.setTime(dateTime);
+        excelExample.setDisplayName(row.getCell(1).getStringCellValue());
+        excelExample.setAccountNumber(String.valueOf(row.getCell(2).getStringCellValue()));
+        excelExample.setStoreName(row.getCell(3).getStringCellValue());
+        excelExample.setTurnoverValue(BigDecimal.valueOf(row.getCell(4).getNumericCellValue()));
+        excelExample.setFee(BigDecimal.valueOf(row.getCell(5).getNumericCellValue()));
+        excelExample.setAmountToPay(BigDecimal.valueOf(row.getCell(6).getNumericCellValue()));
+        excelExample.setActuallyReceived(BigDecimal.valueOf(row.getCell(7).getNumericCellValue()));
+        excelExamples.add(excelExample);
+      }
+      excelExampleRepository.saveAll(excelExamples);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return "Successfully";
   }
+
 }
