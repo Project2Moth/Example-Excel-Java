@@ -4,6 +4,7 @@ import example.dto.ExcelExampleDto;
 import example.service.ExcelService;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -19,6 +20,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @Service
@@ -28,12 +30,13 @@ public class ExcelServiceImpl implements ExcelService {
   @Override
   public Resource exportExcel(List<ExcelExampleDto> excelExampleDtos) {
     // Define columns for file excel
-    String[] columns = {"Thời gian ", "Tên hiển thị ", "Số tài khoản ", "Tên cửa hàng ",
-        "Doanh thu chưa  gồm chi phí", "Chi phí", "Số tiền cần thanh toán", "Thực nhận"};
+    List<String> headers = Arrays
+        .asList("Thời gian ", "Tên hiển thị ", "Số tài khoản ", "Tên cửa hàng ",
+            "Doanh thu chưa  gồm chi phí", "Chi phí", "Số tiền cần thanh toán", "Thực nhận");
     XSSFWorkbook workbook = new XSSFWorkbook();
     XSSFSheet sheet = workbook.createSheet("Revenue");
     // Merge column and row to use for tittle
-    sheet.addMergedRegion(new CellRangeAddress(0, 2, 0, 7));
+    sheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 7));
     // Setup properties for tittle
     XSSFRow titleRow = sheet.createRow(0);
     XSSFFont titleFont = workbook.createFont();
@@ -56,15 +59,16 @@ public class ExcelServiceImpl implements ExcelService {
     headerCellStyle.setAlignment(HorizontalAlignment.CENTER);
     headerCellStyle.setFont(headerFont);
 
-    // Set style for cell excel
-    XSSFRow headerRow = sheet.createRow(3);
-    for (int i = 0; i < columns.length; i++) {
-      XSSFCell cell = headerRow.createCell(i);
+    // Set style for cell excel and add value for header.
+    XSSFRow headerRow = sheet.createRow(2);
+    headers.forEach(str -> {
+      XSSFCell cell = headerRow.createCell(headers.indexOf(str));
       cell.setCellStyle(headerCellStyle);
-    }
+      cell.setCellValue(str);
+    });
 
     // Insert value to cell
-    int rowId = 4;
+    int rowId = 3;
     for (ExcelExampleDto excelExampleDto : excelExampleDtos) {
       XSSFRow row = sheet.createRow(rowId++);
       row.createCell(0).setCellValue(excelExampleDto.getTime());
@@ -85,5 +89,10 @@ public class ExcelServiceImpl implements ExcelService {
       e.printStackTrace();
     }
     return new ByteArrayResource(result.toByteArray());
+  }
+
+  @Override
+  public String importExcel(MultipartFile multipartFile) {
+    return null;
   }
 }
