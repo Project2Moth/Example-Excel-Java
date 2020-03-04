@@ -12,7 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("api/v1/excel")
@@ -36,6 +38,11 @@ public class ExcelController {
       e.printStackTrace();
       return null;
     }
+  }
+
+  @PostMapping("/import")
+  public ResponseEntity<String> importExcel(@RequestParam("file") MultipartFile multipartFile) {
+    return ResponseEntity.ok(excelService.importExcel(multipartFile));
   }
 
 }
